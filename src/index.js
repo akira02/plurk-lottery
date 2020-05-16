@@ -85,10 +85,6 @@ async function handleNewResponse(data) {
   }
 }
 
-checkFriend().catch(console.error);
-
-async function checkFriend() {
-  setInterval(async function autoAddFriend() {
-    await client.request("/APP/Alerts/addAllAsFriends");
-  }, 10000);
-}
+setInterval(function autoAddFriend() {
+  client.request("/APP/Alerts/addAllAsFriends").catch(console.error);
+}, 10000);
