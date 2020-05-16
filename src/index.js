@@ -87,13 +87,24 @@ async function handleMatch(plurk1, plurk2) {
   const MAX_CONTENT_LENGTH = 50;
   const content1 = truncate(plurk1.content_raw, MAX_CONTENT_LENGTH);
   const content2 = truncate(plurk2.content_raw, MAX_CONTENT_LENGTH);
-  await client.request("/APP/Timeline/plurkAdd", {
+  const newPlurk = await client.request("/APP/Timeline/plurkAdd", {
     qualifier: ":",
     content:
       "配對成功 [ok]\n\n" +
       `@${data1.user.nick_name}: ${content1}\n\n` +
       `@${data2.user.nick_name}: ${content2}`,
     limited_to: JSON.stringify([plurk1.user_id, plurk2.user_id]),
+  });
+  const newPlurkUrl = plurkUrl(newPlurk.plurk_id);
+  await client.request("/APP/Responses/responseAdd", {
+    plurk_id: plurk1.plurk_id,
+    qualifier: ":",
+    content: "配對成功 [ok]\n" + newPlurkUrl,
+  });
+  await client.request("/APP/Responses/responseAdd", {
+    plurk_id: plurk2.plurk_id,
+    qualifier: ":",
+    content: "配對成功 [ok]\n" + newPlurkUrl,
   });
 }
 
@@ -111,4 +122,8 @@ function truncate(text, length) {
   } else {
     return length === 0 ? "" : text.slice(0, length - 1) + "…";
   }
+}
+
+function plurkUrl(plurk_id) {
+  return `https://www.plurk.com/p/${plurk_id.toString(36)}`;
 }
