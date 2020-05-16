@@ -70,7 +70,7 @@ async function isMatchRequest(plurk) {
   );
 }
 
-async function handleResponse(data) {
+async function handleNewResponse(data) {
   const { plurk, response } = data;
   if ((await isMatchRequest(plurk)) && response.user_id === plurk.user_id) {
     const command = response.content_raw.trim();
