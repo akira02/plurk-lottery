@@ -18,18 +18,14 @@ const queue = new MatchingQueue({
     return plurk1.user_id !== plurk2.user_id;
   },
 });
-
-queue.on("match", async (plurk1, plurk2) => {
-  await client.request("/APP/Timeline/plurkAdd", {
-    qualifier: ":",
-    content: "配對成功 [ok]",
-    limited_to: JSON.stringify([plurk1.user_id, plurk2.user_id]),
-  });
-});
-
+queue.on("match", handleMatch);
 queue.on("error", console.error);
 
 initChannel().catch(console.error);
+
+setInterval(function autoAddFriend() {
+  client.request("/APP/Alerts/addAllAsFriends").catch(console.error);
+}, 10000);
 
 async function initChannel() {
   const result = await client.request("/APP/Realtime/getUserChannel");
@@ -85,6 +81,34 @@ async function handleNewResponse(data) {
   }
 }
 
-setInterval(function autoAddFriend() {
-  client.request("/APP/Alerts/addAllAsFriends").catch(console.error);
-}, 10000);
+async function handleMatch(plurk1, plurk2) {
+  const data1 = await getPlurkData(client, plurk1.plurk_id);
+  const data2 = await getPlurkData(client, plurk2.plurk_id);
+  const MAX_CONTENT_LENGTH = 50;
+  const content1 = truncate(plurk1.content_raw, MAX_CONTENT_LENGTH);
+  const content2 = truncate(plurk2.content_raw, MAX_CONTENT_LENGTH);
+  await client.request("/APP/Timeline/plurkAdd", {
+    qualifier: ":",
+    content:
+      "配對成功 [ok]\n\n" +
+      `@${data1.user.nick_name}: ${content1}\n\n` +
+      `@${data2.user.nick_name}: ${content2}`,
+    limited_to: JSON.stringify([plurk1.user_id, plurk2.user_id]),
+  });
+}
+
+function getPlurkData(client, plurk_id) {
+  return client.request("/APP/Timeline/getPlurk", {
+    plurk_id,
+    minimal_data: true,
+    minimal_user: true,
+  });
+}
+
+function truncate(text, length) {
+  if (text.length <= length) {
+    return text;
+  } else {
+    return length === 0 ? "" : text.slice(0, length - 1) + "…";
+  }
+}
