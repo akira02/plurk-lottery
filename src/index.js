@@ -2,7 +2,7 @@ const PlurkClient = require("./plurk-client");
 const PlurkChannel = require("./plurk-channel");
 const MatchingQueue = require("./matching-queue");
 
-const config = require("./config");
+const config = require("../config");
 
 const client = new PlurkClient({
   consumerKey: config.consumerKey,
