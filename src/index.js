@@ -22,7 +22,7 @@ const queue = new MatchingQueue({
 queue.on("match", async (plurk1, plurk2) => {
   await client.request("/APP/Timeline/plurkAdd", {
     qualifier: ":",
-    content: "配對成功！",
+    content: "配對成功 [ok]",
     limited_to: JSON.stringify([plurk1.user_id, plurk2.user_id]),
   });
 });
@@ -49,7 +49,7 @@ async function handleNewPlurk(plurk) {
     await client.request("/APP/Responses/responseAdd", {
       plurk_id: plurk.plurk_id,
       qualifier: ":",
-      content: "你已經在配對了，沒辦法幫你重複加入喔！",
+      content: "你已經在配對中囉，請稍候 [error]",
     });
     return;
   }
@@ -58,7 +58,7 @@ async function handleNewPlurk(plurk) {
   await client.request("/APP/Responses/responseAdd", {
     plurk_id: plurk.plurk_id,
     qualifier: ":",
-    content: "配對中，請耐心等候...\n回覆 /取消 可以取消這次配對喔！",
+    content: "配對中 [loading] \n回覆 取消 可以取消這次配對喔！",
   });
 }
 
@@ -74,13 +74,21 @@ async function handleNewResponse(data) {
   const { plurk, response } = data;
   if ((await isMatchRequest(plurk)) && response.user_id === plurk.user_id) {
     const command = response.content_raw.trim();
-    if (command === "/取消") {
+    if (command === "取消") {
       queue.removeWhere((item) => item.plurk_id === plurk.plurk_id);
       await client.request("/APP/Responses/responseAdd", {
         plurk_id: plurk.plurk_id,
         qualifier: ":",
-        content: "幫你取消這次配對了！",
+        content: "幫你取消這次配對了 [error]",
       });
     }
   }
+}
+
+checkFriend().catch(console.error);
+
+async function checkFriend() {
+  setInterval(async function autoAddFriend() {
+    await client.request("/APP/Alerts/addAllAsFriends");
+  }, 10000);
 }
