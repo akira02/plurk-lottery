@@ -10,7 +10,7 @@ async function main() {
   const channel = await initPlurkChannel(client);
   const botData = await client.request("/APP/Users/me");
 
-  channel.poll().catch(console.error);
+  channel.poll();
 
   setInterval(() => {
     client.request("/APP/Alerts/addAllAsFriends").catch(console.error);

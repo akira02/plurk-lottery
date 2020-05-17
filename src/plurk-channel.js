@@ -23,11 +23,11 @@ module.exports = class PlurkChannel extends EventEmitter {
       try {
         await this.pollOnce();
       } catch (err) {
-        if (options.retry) {
-          await delay(options.retryDelay);
-        } else {
-          throw err;
+        this.emit("error", err);
+        if (!options.retry) {
+          break;
         }
+        await delay(options.retryDelay);
       }
     }
   }
