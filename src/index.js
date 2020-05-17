@@ -46,7 +46,7 @@ async function main() {
   }
 
   async function handleNewPlurk(plurk) {
-    if (!(await isMatchRequest(plurk))) {
+    if (!isMatchRequest(plurk)) {
       return;
     }
 
@@ -67,8 +67,7 @@ async function main() {
     });
   }
 
-  async function isMatchRequest(plurk) {
-    const botData = await botDataPromise;
+  function isMatchRequest(plurk) {
     return (
       plurk.user_id !== botData.id &&
       plurk.limited_to === `|${botData.id}||${plurk.user_id}|`
@@ -77,7 +76,7 @@ async function main() {
 
   async function handleNewResponse(data) {
     const { plurk, response } = data;
-    if ((await isMatchRequest(plurk)) && response.user_id === plurk.user_id) {
+    if (isMatchRequest(plurk) && response.user_id === plurk.user_id) {
       const command = response.content_raw.trim();
       if (command === "取消") {
         queue.removeWhere((item) => item.plurk_id === plurk.plurk_id);
