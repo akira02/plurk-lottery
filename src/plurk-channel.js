@@ -11,9 +11,24 @@ module.exports = class PlurkChannel extends EventEmitter {
     this.offset = 0;
   }
 
-  async poll() {
+  async poll(options) {
+    const defaultOptions = {
+      retry: true,
+      retryDelay: 3000,
+    };
+
+    options = { ...defaultOptions, ...options };
+
     while (true) {
-      await this.pollOnce();
+      try {
+        await this.pollOnce();
+      } catch (err) {
+        if (options.retry) {
+          await delay(options.retryDelay);
+        } else {
+          throw err;
+        }
+      }
     }
   }
 
@@ -60,4 +75,10 @@ function parseResponse(text) {
   const match = text.match(/^CometChannel\.scriptCallback\((.*)\);$/);
   const json = match[1];
   return JSON.parse(json);
+}
+
+function delay(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
