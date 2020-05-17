@@ -82,8 +82,14 @@ async function handleNewResponse(data) {
 }
 
 async function handleMatch(plurk1, plurk2) {
-  const data1 = await getPlurkData(client, plurk1.plurk_id);
-  const data2 = await getPlurkData(client, plurk2.plurk_id);
+  const profile1 = await client.request("/APP/Profile/getPublicProfile", {
+    user_id: plurk1.user_id,
+    include_plurks: false,
+  });
+  const profile2 = await client.request("/APP/Profile/getPublicProfile", {
+    user_id: plurk2.user_id,
+    include_plurks: false,
+  });
   const MAX_CONTENT_LENGTH = 50;
   const content1 = truncate(plurk1.content_raw, MAX_CONTENT_LENGTH);
   const content2 = truncate(plurk2.content_raw, MAX_CONTENT_LENGTH);
@@ -91,8 +97,8 @@ async function handleMatch(plurk1, plurk2) {
     qualifier: ":",
     content:
       "配對成功 [ok]\n\n" +
-      `@${data1.user.nick_name}: ${content1}\n\n` +
-      `@${data2.user.nick_name}: ${content2}`,
+      `@${profile1.user_info.nick_name}: ${content1}\n\n` +
+      `@${profile2.user_info.nick_name}: ${content2}`,
     limited_to: JSON.stringify([plurk1.user_id, plurk2.user_id]),
   });
   const newPlurkUrl = plurkUrl(newPlurk.plurk_id);
@@ -105,14 +111,6 @@ async function handleMatch(plurk1, plurk2) {
     plurk_id: plurk2.plurk_id,
     qualifier: ":",
     content: "配對成功 [ok]\n" + newPlurkUrl,
-  });
-}
-
-function getPlurkData(client, plurk_id) {
-  return client.request("/APP/Timeline/getPlurk", {
-    plurk_id,
-    minimal_data: true,
-    minimal_user: true,
   });
 }
 
