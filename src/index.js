@@ -98,7 +98,7 @@ async function main() {
       user_id: plurk2.user_id,
       include_plurks: false,
     });
-    const MAX_CONTENT_LENGTH = 50;
+    const MAX_CONTENT_LENGTH = 120;
     const content1 = truncate(plurk1.content_raw, MAX_CONTENT_LENGTH);
     const content2 = truncate(plurk2.content_raw, MAX_CONTENT_LENGTH);
     const newPlurk = await client.request("/APP/Timeline/plurkAdd", {
