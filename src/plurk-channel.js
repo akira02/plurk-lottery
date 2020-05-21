@@ -1,6 +1,5 @@
 const EventEmitter = require("events");
 const fetch = require("node-fetch");
-const querystring = require("querystring");
 const { URL } = require("url");
 
 module.exports = class PlurkChannel extends EventEmitter {
@@ -65,9 +64,11 @@ module.exports = class PlurkChannel extends EventEmitter {
 
 function setParams(urlString, newParams) {
   const url = new URL(urlString);
-  const oldParams = querystring.parse(url.search);
-  const newQuery = querystring.stringify({ ...oldParams, ...newParams });
-  url.search = newQuery;
+  const params = url.searchParams;
+  for (const key in newParams) {
+    params.set(key, newParams[key]);
+  }
+  url.search = params.toString();
   return url.toString();
 }
 
