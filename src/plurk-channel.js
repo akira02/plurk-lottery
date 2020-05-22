@@ -64,11 +64,9 @@ module.exports = class PlurkChannel extends EventEmitter {
 
 function setParams(urlString, newParams) {
   const url = new URL(urlString);
-  const params = url.searchParams;
   for (const key in newParams) {
-    params.set(key, newParams[key]);
+    url.searchParams.set(key, newParams[key]);
   }
-  url.search = params.toString();
   return url.toString();
 }
 
