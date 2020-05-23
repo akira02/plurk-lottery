@@ -32,6 +32,7 @@ module.exports = class PlurkChannel extends EventEmitter {
   }
 
   async pollOnce() {
+    await this.awaken();
     const url = setParams(this.server, {
       channel: this.channel,
       offset: this.offset,
@@ -48,6 +49,12 @@ module.exports = class PlurkChannel extends EventEmitter {
         this.handleNewData(data);
       }
     }
+  }
+
+  async awaken() {
+    const url = new URL("https://www.plurk.com/_comet/generic");
+    url.searchParams.set("channel", this.channel);
+    await fetch(url.toString()).then((r) => r.text());
   }
 
   handleNewData(data) {
