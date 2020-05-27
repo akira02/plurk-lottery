@@ -67,6 +67,16 @@ async function main() {
     });
   }
 
+  async function handleNewResponse(data) {
+    const { plurk, response } = data;
+    if (isMatchRequest(plurk) && response.user_id === plurk.user_id) {
+      return handleMatchResponse(data);
+    }
+    if (isChat(plurk) && response.user_id !== botData.id) {
+      return handleChatResponse(data);
+    }
+  }
+
   function isMatchRequest(plurk) {
     return (
       plurk.user_id !== botData.id &&
@@ -74,16 +84,42 @@ async function main() {
     );
   }
 
-  async function handleNewResponse(data) {
+  function isChat(plurk) {
+    return plurk.user_id === botData.id && plurk.limited_to != null;
+  }
+
+  async function handleMatchResponse(data) {
     const { plurk, response } = data;
-    if (isMatchRequest(plurk) && response.user_id === plurk.user_id) {
-      const command = response.content_raw.trim();
-      if (command === "取消") {
-        queue.removeWhere((item) => item.plurk_id === plurk.plurk_id);
-        await client.request("/APP/Responses/responseAdd", {
+    const command = response.content_raw.trim();
+    if (command === "取消") {
+      queue.removeWhere((item) => item.plurk_id === plurk.plurk_id);
+      await client.request("/APP/Responses/responseAdd", {
+        plurk_id: plurk.plurk_id,
+        qualifier: ":",
+        content: "幫你取消這次配對了 [error]",
+      });
+    }
+  }
+
+  async function handleChatResponse(data) {
+    const { plurk, response } = data;
+    const user = data.user[response.user_id.toString()];
+    const command = response.content_raw.trim();
+    if (command === "掰掰") {
+      const limitedTo = parseLimitedTo(plurk.limited_to);
+      const newLimitedTo = limitedTo.filter((id) => id !== response.user_id);
+      await client.request("/APP/Timeline/plurkEdit", {
+        plurk_id: plurk.plurk_id,
+        limited_to: JSON.stringify(newLimitedTo),
+      });
+      await client.request("/APP/Responses/responseAdd", {
+        plurk_id: plurk.plurk_id,
+        qualifier: ":",
+        content: `@${user.nick_name} 離開了這個對話`,
+      });
+      if (newLimitedTo.length === 1) {
+        await client.request("/APP/Timeline/plurkDelete", {
           plurk_id: plurk.plurk_id,
-          qualifier: ":",
-          content: "幫你取消這次配對了 [error]",
         });
       }
     }
@@ -120,6 +156,20 @@ async function main() {
       qualifier: ":",
       content: "配對成功 [ok]\n" + newPlurkUrl,
     });
+  }
+
+  function parseLimitedTo(text) {
+    if (text == null) {
+      return null;
+    }
+    const result = [];
+    const pattern = /\|([^|]*)\|/y;
+    let match = null;
+    while ((match = pattern.exec(text)) !== null) {
+      const id = parseInt(match[1]);
+      result.push(id);
+    }
+    return result;
   }
 
   function truncate(text, length) {
