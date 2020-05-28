@@ -37,7 +37,9 @@ module.exports = class PlurkChannel extends EventEmitter {
       channel: this.channel,
       offset: this.offset,
     });
-    const text = await fetch(url).then((r) => r.text());
+    const text = await fetch(url)
+      .then(checkStatus)
+      .then((r) => r.text());
     const response = parseResponse(text);
     if (response.new_offset >= 0) {
       this.offset = response.new_offset;
@@ -54,7 +56,9 @@ module.exports = class PlurkChannel extends EventEmitter {
   async awaken() {
     const url = new URL("https://www.plurk.com/_comet/generic");
     url.searchParams.set("channel", this.channel);
-    await fetch(url.toString()).then((r) => r.text());
+    await fetch(url.toString())
+      .then(checkStatus)
+      .then((r) => r.text());
   }
 
   handleNewData(data) {
@@ -68,6 +72,16 @@ module.exports = class PlurkChannel extends EventEmitter {
     }
   }
 };
+
+function checkStatus(response) {
+  if (response.ok) {
+    return response;
+  } else {
+    const error = new Error(response.statusText);
+    error.response = response;
+    throw error;
+  }
+}
 
 function setParams(urlString, newParams) {
   const url = new URL(urlString);
