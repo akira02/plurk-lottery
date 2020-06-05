@@ -166,7 +166,7 @@ async function main() {
     const pattern = /\|([^|]*)\|/y;
     let match = null;
     while ((match = pattern.exec(text)) !== null) {
-      const id = parseInt(match[1]);
+      const id = parseInt(match[1], 10);
       result.push(id);
     }
     return result;
