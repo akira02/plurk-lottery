@@ -14,7 +14,7 @@
   "author": "egg820",
   "license": "MIT",
   "dependencies": {
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "oauth": "^0.9.15"
   }
 }
